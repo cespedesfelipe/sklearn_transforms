@@ -20,19 +20,19 @@ class DropColumns(BaseEstimator, TransformerMixin):
 
 # All sklearn Transforms must have the `transform` and `fit` methods
 class CustomImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, columns):
-        self.columns = columns
+    def __init__(self, strategy='mean', excluded_columns=[]):
+        self.strategy = strategy
+        self.excluded_columns = excluded_columns
 
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
         data = X.copy()
-        excluded_columns = [] if self.excluded_columns == None else self.excluded_columns
-        df = data.drop(excluded_columns, axis='columns')
+        df = data.drop(self.excluded_columns, axis='columns')
         si = SimpleImputer(
             missing_values=np.nan,
-            strategy='mean' if self.strategy == None else self.strategy
+            strategy=self.strategy
         )
         si.fit(X=df)
         new_df = pd.DataFrame.from_records(
@@ -41,8 +41,7 @@ class CustomImputer(BaseEstimator, TransformerMixin):
             ),
             columns=df.columns
         )
-        for col in excluded_columns:
+        for col in self.excluded_columns:
             new_df[col] = data[col]
         
-
         return new_df
